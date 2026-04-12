@@ -6,6 +6,7 @@
   <title>CatatIn — Asisten Belajar Suara</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 </head>
 <body>
 
@@ -157,6 +158,16 @@
           <line x1="8"  y1="23" x2="16" y2="23"/>
         </svg>
         Rekam Suara
+      </div>
+      
+      <div class="sidebar-item" id="nav-summarize" onclick="showPage('summarize')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        Ringkas AI
       </div>
 
       <div class="sidebar-item" id="nav-subjects" onclick="showPage('subjects')">
@@ -326,6 +337,48 @@
         <div class="page-title">Riwayat Rekaman</div>
         <div class="page-subtitle">Semua sesi rekaman kamu tersimpan di sini</div>
         <div id="history-list"></div>
+      </div>
+
+
+      <!-- ── RINGKAS TEKS & PDF ── -->
+      <div id="subpage-summarize" style="display:none">
+        <div class="page-title">Ringkas menggunakan AI</div>
+        <div class="page-subtitle">Tempel teks panjang atau unggah PDF untuk dirangkum secara otomatis</div>
+        
+        <div class="summarize-layout">
+          <div class="summarize-input-box">
+            <div class="card-label">Input Teks</div>
+            <textarea id="summarize-text-input" placeholder="Tempelkan teks yang ingin dirangkum di sini..."></textarea>
+            
+            <div class="card-label" style="margin-top:20px;">Atau Unggah PDF</div>
+            <div class="upload-zone" id="upload-zone" onclick="document.getElementById('pdf-file').click()">
+              <input type="file" id="pdf-file" accept=".pdf" style="display:none" onchange="handleFileSelect(event)">
+              <div class="upload-icon">📄</div>
+              <div class="upload-text" id="upload-status">Klik untuk pilih PDF atau seret file ke sini</div>
+              <div class="upload-info">Maksimal 10MB</div>
+            </div>
+
+            <div class="summarize-actions">
+              <button class="summarize-btn primary" onclick="doTextSummarize()">Rangkum Sekarang</button>
+              <button class="summarize-btn danger" onclick="clearSummarize()">Bersihkan</button>
+            </div>
+          </div>
+
+          <div class="summarize-output-box">
+             <div class="card-label">Hasil Rangkuman</div>
+             <div class="summary-loading" id="text-summ-loading">
+                <div class="spinner"></div> Merangkum...
+              </div>
+              <div class="summary-output" id="text-summary-output">
+                <span class="summary-placeholder">Hasil rangkuman akan muncul di sini...</span>
+              </div>
+              
+              <div id="text-keypoints-card" style="display:none; margin-top:25px;">
+                <div class="card-label">Poin-poin Penting</div>
+                <ul class="key-points" id="text-keypoints-list"></ul>
+              </div>
+          </div>
+        </div>
       </div>
 
     </div><!-- /content -->

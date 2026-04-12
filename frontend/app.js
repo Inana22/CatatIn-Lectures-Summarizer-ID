@@ -23,6 +23,7 @@ const waveformEl = document.getElementById('waveform');
 
 // ─── INIT: WAVEFORM BARS ─────────────
 (function buildWaveform() {
+  if (!waveformEl) return;
   for (let i = 0; i < 22; i++) {
     const b = document.createElement('div');
     b.className = 'wave-bar';
@@ -36,12 +37,14 @@ const waveformEl = document.getElementById('waveform');
 
 // ─── NAVIGATION ──────────────────────
 function showPage(name) {
-  ['record', 'subjects', 'history'].forEach(p => {
-    document.getElementById('subpage-' + p).style.display = 'none';
+  ['record', 'subjects', 'history', 'summarize'].forEach(p => {
+    const el = document.getElementById('subpage-' + p);
+    if (el) el.style.display = 'none';
     const nav = document.getElementById('nav-' + p);
     if (nav) nav.classList.remove('active');
   });
-  document.getElementById('subpage-' + name).style.display = 'block';
+  const page = document.getElementById('subpage-' + name);
+  if (page) page.style.display = 'block';
   const nav = document.getElementById('nav-' + name);
   if (nav) nav.classList.add('active');
 
@@ -183,7 +186,7 @@ function updateSession() {
   }
 }
 
-// ─── AI SUMMARIZE ────────────────────
+// ─── AI SUMMARIZE (Recording) ────────────────────
 async function doSummarize() {
   const text = finalTranscript.trim();
   if (!text) { showToast('Rekam sesuatu dulu sebelum merangkum!'); return; }
@@ -199,29 +202,24 @@ async function doSummarize() {
   document.getElementById('keypoints-card').style.display = 'none';
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('http://localhost:8080/summarize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: `Kamu adalah asisten belajar cerdas bernama CatatIn. Ketika user memberikan transkrip rekaman penjelasan mata pelajaran, buat rangkuman singkat (3-5 kalimat) dalam bahasa Indonesia yang jelas dan mudah dipahami. Setelah rangkuman, tambahkan baris "POIN:" lalu 3-5 poin kunci dipisah dengan tanda |. Format: [rangkuman]\nPOIN:[poin1]|[poin2]|[poin3]`,
-        messages: [{ role: 'user', content: `Mata pelajaran: ${subj}\n\nTranskrip:\n${text.slice(0, 3000)}` }]
+        text: text,
+        num_sentences: 3
       })
     });
 
-    const data  = await res.json();
-    const full  = data.content.map(c => c.text || '').join('');
-    const parts = full.split('POIN:');
-    const summary   = parts[0].trim();
-    const rawPoints = parts[1] ? parts[1].split('|').map(p => p.trim()).filter(Boolean) : [];
+    const data = await res.json();
+    if (res.status !== 200) throw new Error(data.detail || 'Gagal merangkum');
 
-    output.textContent = summary;
+    output.textContent = data.summary;
 
-    if (rawPoints.length) {
+    if (data.points && data.points.length) {
       const kpList = document.getElementById('keypoints-list');
       kpList.innerHTML = '';
-      rawPoints.forEach(p => {
+      data.points.forEach(p => {
         const li = document.createElement('li');
         li.innerHTML = `<span class="kp-dot"></span>${p}`;
         kpList.appendChild(li);
@@ -229,12 +227,101 @@ async function doSummarize() {
       document.getElementById('keypoints-card').style.display = 'block';
     }
   } catch (err) {
-    output.textContent = 'Terjadi kesalahan saat merangkum. Pastikan koneksi internet stabil.';
+    output.textContent = 'Terjadi kesalahan saat merangkum. Pastikan backend Python sudah berjalan.';
     console.error(err);
   } finally {
     loading.classList.remove('show');
     btn.disabled = false;
   }
+}
+
+// ─── TEXT & PDF SUMMARIZE ─────────────
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+async function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.type !== 'application/pdf') { showToast('Hanya mendukung file PDF!'); return; }
+
+  const status = document.getElementById('upload-status');
+  status.textContent = 'Mengekstrak teks dari PDF...';
+  
+  try {
+    const text = await extractTextFromPdf(file);
+    document.getElementById('summarize-text-input').value = text;
+    status.textContent = `Berhasil: ${file.name}`;
+    showToast('Teks berhasil diekstrak!');
+  } catch (err) {
+    console.error(err);
+    status.textContent = 'Gagal membaca PDF.';
+    showToast('Gagal mengekstrak PDF.');
+  }
+}
+
+async function extractTextFromPdf(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let fullText = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const strings = content.items.map(item => item.str);
+    fullText += strings.join(' ') + '\n';
+  }
+  return fullText;
+}
+
+async function doTextSummarize() {
+  const text = document.getElementById('summarize-text-input').value.trim();
+  if (!text) { showToast('Masukkan teks atau unggah PDF dulu!'); return; }
+
+  const btn     = document.querySelector('#subpage-summarize .summarize-btn.primary');
+  const loading = document.getElementById('text-summ-loading');
+  const output  = document.getElementById('text-summary-output');
+  const kpCard  = document.getElementById('text-keypoints-card');
+
+  btn.disabled = true;
+  loading.classList.add('show');
+  output.textContent = '';
+  kpCard.style.display = 'none';
+
+  try {
+    const res = await fetch('http://localhost:8080/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: text, num_sentences: 5 })
+    });
+
+    const data = await res.json();
+    if (res.status !== 200) throw new Error(data.detail || 'Gagal merangkum');
+
+    output.textContent = data.summary;
+
+    if (data.points && data.points.length) {
+      const kpList = document.getElementById('text-keypoints-list');
+      kpList.innerHTML = '';
+      data.points.forEach(p => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="kp-dot"></span>${p}`;
+        kpList.appendChild(li);
+      });
+      kpCard.style.display = 'block';
+    }
+  } catch (err) {
+    output.textContent = 'Error: Gagal menghubungi backend AI.';
+    console.error(err);
+  } finally {
+    loading.classList.remove('show');
+    btn.disabled = false;
+  }
+}
+
+function clearSummarize() {
+  document.getElementById('summarize-text-input').value = '';
+  document.getElementById('pdf-file').value = '';
+  document.getElementById('upload-status').textContent = 'Klik untuk pilih PDF atau seret file ke sini';
+  document.getElementById('text-summary-output').innerHTML = '<span class="summary-placeholder">Hasil rangkuman akan muncul di sini...</span>';
+  document.getElementById('text-keypoints-card').style.display = 'none';
 }
 
 // ─── SUBJECTS ────────────────────────
