@@ -4,18 +4,18 @@
 
 // ─── SUBJECTS DATA ───────────────────
 const SUBJECTS = [
-  { name: 'Fisika',          desc: 'Mekanika, Termodinamika, Gelombang, Optik',  icon: '⚛️', color: '#e8edf5', count: 32, topics: 'Gerak, Energi, Listrik, Magnetisme' },
-  { name: 'Teologi & Agama', desc: 'Ilmu Kalam, Fiqh, Perbandingan Agama',       icon: '✦',  color: '#e5edf5', count: 18, topics: 'Islam, Kristen, Hindu, Buddha' },
-  { name: 'Sejarah',         desc: 'Sejarah Indonesia & Dunia',                   icon: '📜', color: '#edf2f7', count: 31, topics: 'Kolonialisme, Kemerdekaan, Perang Dunia' },
+  { name: 'Fisika', desc: 'Mekanika, Termodinamika, Gelombang, Optik', icon: '⚛️', color: '#e8edf5', count: 32, topics: 'Gerak, Energi, Listrik, Magnetisme' },
+  { name: 'Teologi & Agama', desc: 'Ilmu Kalam, Fiqh, Perbandingan Agama', icon: '✦', color: '#e5edf5', count: 18, topics: 'Islam, Kristen, Hindu, Buddha' },
+  { name: 'Sejarah', desc: 'Sejarah Indonesia & Dunia', icon: '📜', color: '#edf2f7', count: 31, topics: 'Kolonialisme, Kemerdekaan, Perang Dunia' },
 ];
 
 // ─── STATE ───────────────────────────
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let recognition    = null;
-let isListening    = false;
+let recognition = null;
+let isListening = false;
 let finalTranscript = '';
-let timerInterval  = null;
-let elapsed        = 0;
+let timerInterval = null;
+let elapsed = 0;
 let history_sessions = [];
 
 // ─── DOM REFS ────────────────────────
@@ -27,9 +27,9 @@ const waveformEl = document.getElementById('waveform');
   for (let i = 0; i < 22; i++) {
     const b = document.createElement('div');
     b.className = 'wave-bar';
-    b.style.setProperty('--spd',  (0.3 + Math.random() * 0.5).toFixed(2) + 's');
-    b.style.setProperty('--min',  (3   + Math.random() * 5  ).toFixed(0) + 'px');
-    b.style.setProperty('--max',  (14  + Math.random() * 26 ).toFixed(0) + 'px');
+    b.style.setProperty('--spd', (0.3 + Math.random() * 0.5).toFixed(2) + 's');
+    b.style.setProperty('--min', (3 + Math.random() * 5).toFixed(0) + 'px');
+    b.style.setProperty('--max', (14 + Math.random() * 26).toFixed(0) + 'px');
     b.style.animationDelay = (Math.random() * 0.5).toFixed(2) + 's';
     waveformEl.appendChild(b);
   }
@@ -49,7 +49,7 @@ function showPage(name) {
   if (nav) nav.classList.add('active');
 
   if (name === 'subjects') renderSubjects('');
-  if (name === 'history')  renderHistory();
+  if (name === 'history') renderHistory();
 }
 
 function doLogin() {
@@ -85,12 +85,12 @@ function setListening(val) {
   isListening = val;
   const btn = document.getElementById('micBtn');
   btn.classList.toggle('listening', val);
-  document.getElementById('icon-mic').style.display  = val ? 'none'  : 'block';
+  document.getElementById('icon-mic').style.display = val ? 'none' : 'block';
   document.getElementById('icon-stop').style.display = val ? 'block' : 'none';
   document.getElementById('micStatus').textContent = val ? 'Merekam suara...' : 'Siap mendengarkan...';
   document.getElementById('micStatus').classList.toggle('active', val);
   waveformEl.classList.toggle('active', val);
-  waveformEl.classList.toggle('idle',   !val);
+  waveformEl.classList.toggle('idle', !val);
   document.getElementById('mic-instruction').textContent = val
     ? 'Tekan stop untuk menghentikan rekaman'
     : 'Tekan tombol mikrofon untuk mulai merekam';
@@ -108,7 +108,7 @@ function setListening(val) {
   const sub = document.getElementById('sess-sub');
   const sel = document.getElementById('subject-sel').value;
   if (val) sub.textContent = (sel || 'Umum') + ' · Merekam...';
-  else     sub.textContent = sel ? (sel + ' · Siap dimulai') : 'Pilih mata pelajaran & mulai rekam';
+  else sub.textContent = sel ? (sel + ' · Siap dimulai') : 'Pilih mata pelajaran & mulai rekam';
 }
 
 // ─── SPEECH RECOGNITION ──────────────
@@ -191,9 +191,9 @@ async function doSummarize() {
   const text = finalTranscript.trim();
   if (!text) { showToast('Rekam sesuatu dulu sebelum merangkum!'); return; }
 
-  const btn     = document.getElementById('summ-btn');
+  const btn = document.getElementById('summ-btn');
   const loading = document.getElementById('summ-loading');
-  const kpCard  = document.getElementById('keypoints-card');
+  const kpCard = document.getElementById('keypoints-card');
 
   btn.disabled = true;
   loading.classList.add('show');
@@ -248,7 +248,7 @@ async function handleFileSelect(e) {
 
   const status = document.getElementById('upload-status');
   status.textContent = 'Mengekstrak teks dari PDF...';
-  
+
   try {
     const text = await extractTextFromPdf(file);
     document.getElementById('summarize-text-input').value = text;
@@ -278,9 +278,9 @@ async function doTextSummarize() {
   const text = document.getElementById('summarize-text-input').value.trim();
   if (!text) { showToast('Masukkan teks atau unggah PDF dulu!'); return; }
 
-  const btn     = document.querySelector('#subpage-summarize .summarize-btn.primary');
+  const btn = document.querySelector('#subpage-summarize .summarize-btn.primary');
   const loading = document.getElementById('text-summ-loading');
-  const kpCard  = document.getElementById('text-keypoints-card');
+  const kpCard = document.getElementById('text-keypoints-card');
 
   btn.disabled = true;
   loading.classList.add('show');
