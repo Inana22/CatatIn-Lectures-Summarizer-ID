@@ -462,9 +462,12 @@ body { display: flex; flex-direction: column; min-height: 100vh; }
 .summarize-btn:hover { background: var(--blue-mid); }
 .summarize-btn:active { transform: scale(0.99); }
 .summarize-btn:disabled { background: var(--blue-pale); cursor: not-allowed; }
-.summary-output {
-  font-size: 13px; line-height: 1.7; color: var(--text2);
-  min-height: 80px; max-height: 220px; overflow-y: auto;
+.summary-placeholder-box, .text-summary-placeholder-box {
+  background: var(--card2);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
 }
 .summary-placeholder { color: var(--blue-pale); font-style: italic; font-size: 13px; }
 .summary-loading { display: none; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }

@@ -291,23 +291,18 @@
             </div>
 
             <div class="info-card">
-              <h3>Rangkuman AI</h3>
+              <h3>Poin Utama AI</h3>
               <div class="summary-loading" id="summ-loading">
-                <div class="spinner"></div> Merangkum...
+                <div class="spinner"></div> Menganalisa...
               </div>
-              <div class="summary-output" id="summary-output">
-                <span class="summary-placeholder">
-                  Rangkuman akan muncul di sini setelah Anda menekan tombol di bawah.
-                </span>
+              
+              <div id="keypoints-card" style="display:none">
+                <ul class="key-points" id="keypoints-list"></ul>
               </div>
-              <button class="summarize-btn" id="summ-btn" onclick="doSummarize()">
-                ✦ Rangkum dengan AI
-              </button>
-            </div>
 
-            <div class="info-card" id="keypoints-card" style="display:none">
-              <h3>Poin Utama</h3>
-              <ul class="key-points" id="keypoints-list"></ul>
+              <button class="summarize-btn" id="summ-btn" onclick="doSummarize()">
+                ✦ Dapatkan Poin Penting
+              </button>
             </div>
 
           </div><!-- /summary-col -->
@@ -365,16 +360,12 @@
           </div>
 
           <div class="summarize-output-box">
-             <div class="card-label">Hasil Rangkuman</div>
+             <div class="card-label">Poin-poin Penting</div>
              <div class="summary-loading" id="text-summ-loading">
-                <div class="spinner"></div> Merangkum...
-              </div>
-              <div class="summary-output" id="text-summary-output">
-                <span class="summary-placeholder">Hasil rangkuman akan muncul di sini...</span>
+                <div class="spinner"></div> Menganalisa...
               </div>
               
-              <div id="text-keypoints-card" style="display:none; margin-top:25px;">
-                <div class="card-label">Poin-poin Penting</div>
+              <div id="text-keypoints-card" style="display:none;">
                 <ul class="key-points" id="text-keypoints-list"></ul>
               </div>
           </div>

@@ -191,30 +191,26 @@ async function doSummarize() {
   const text = finalTranscript.trim();
   if (!text) { showToast('Rekam sesuatu dulu sebelum merangkum!'); return; }
 
-  const subj    = document.getElementById('subject-sel').value || 'umum';
   const btn     = document.getElementById('summ-btn');
   const loading = document.getElementById('summ-loading');
-  const output  = document.getElementById('summary-output');
+  const kpCard  = document.getElementById('keypoints-card');
 
   btn.disabled = true;
   loading.classList.add('show');
-  output.innerHTML = '';
-  document.getElementById('keypoints-card').style.display = 'none';
+  kpCard.style.display = 'none';
 
   try {
-    const res = await fetch('http://localhost:8080/summarize', {
+    const res = await fetch('http://127.0.0.1:8080/summarize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         text: text,
-        num_sentences: 3
+        num_sentences: 0
       })
     });
 
     const data = await res.json();
-    if (res.status !== 200) throw new Error(data.detail || 'Gagal merangkum');
-
-    output.textContent = data.summary;
+    if (res.status !== 200) throw new Error(data.detail || 'Gagal menganalisa');
 
     if (data.points && data.points.length) {
       const kpList = document.getElementById('keypoints-list');
@@ -224,10 +220,17 @@ async function doSummarize() {
         li.innerHTML = `<span class="kp-dot"></span>${p}`;
         kpList.appendChild(li);
       });
-      document.getElementById('keypoints-card').style.display = 'block';
+      kpCard.style.display = 'block';
+    } else {
+      // Fallback: Use the original transcript if no specific points found
+      const kpList = document.getElementById('keypoints-list');
+      kpList.innerHTML = `<li><span class="kp-dot"></span>${text.slice(0, 500)}${text.length > 500 ? '...' : ''}</li>`;
+      kpCard.style.display = 'block';
     }
   } catch (err) {
-    output.textContent = 'Terjadi kesalahan saat merangkum. Pastikan backend Python sudah berjalan.';
+    const kpList = document.getElementById('keypoints-list');
+    kpList.innerHTML = `<li style="color:var(--red)">Gagal menghubungi AI. Pastikan backend sudah menyala di http://127.0.0.1:8080</li>`;
+    kpCard.style.display = 'block';
     console.error(err);
   } finally {
     loading.classList.remove('show');
@@ -277,25 +280,21 @@ async function doTextSummarize() {
 
   const btn     = document.querySelector('#subpage-summarize .summarize-btn.primary');
   const loading = document.getElementById('text-summ-loading');
-  const output  = document.getElementById('text-summary-output');
   const kpCard  = document.getElementById('text-keypoints-card');
 
   btn.disabled = true;
   loading.classList.add('show');
-  output.textContent = '';
   kpCard.style.display = 'none';
 
   try {
-    const res = await fetch('http://localhost:8080/summarize', {
+    const res = await fetch('http://127.0.0.1:8080/summarize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text, num_sentences: 5 })
+      body: JSON.stringify({ text: text, num_sentences: 0 })
     });
 
     const data = await res.json();
-    if (res.status !== 200) throw new Error(data.detail || 'Gagal merangkum');
-
-    output.textContent = data.summary;
+    if (res.status !== 200) throw new Error(data.detail || 'Gagal menganalisa');
 
     if (data.points && data.points.length) {
       const kpList = document.getElementById('text-keypoints-list');
@@ -306,9 +305,16 @@ async function doTextSummarize() {
         kpList.appendChild(li);
       });
       kpCard.style.display = 'block';
+    } else {
+      // Fallback: Use original text snippet
+      const kpList = document.getElementById('text-keypoints-list');
+      kpList.innerHTML = `<li><span class="kp-dot"></span>${text.slice(0, 500)}${text.length > 500 ? '...' : ''}</li>`;
+      kpCard.style.display = 'block';
     }
   } catch (err) {
-    output.textContent = 'Error: Gagal menghubungi backend AI.';
+    const kpList = document.getElementById('text-keypoints-list');
+    kpList.innerHTML = `<li style="color:var(--red)">Gagal menghubungi AI di 127.0.0.1:8080</li>`;
+    kpCard.style.display = 'block';
     console.error(err);
   } finally {
     loading.classList.remove('show');
@@ -320,7 +326,6 @@ function clearSummarize() {
   document.getElementById('summarize-text-input').value = '';
   document.getElementById('pdf-file').value = '';
   document.getElementById('upload-status').textContent = 'Klik untuk pilih PDF atau seret file ke sini';
-  document.getElementById('text-summary-output').innerHTML = '<span class="summary-placeholder">Hasil rangkuman akan muncul di sini...</span>';
   document.getElementById('text-keypoints-card').style.display = 'none';
 }
 

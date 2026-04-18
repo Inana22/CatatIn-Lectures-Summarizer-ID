@@ -6,6 +6,8 @@ import torch
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
+import re
+
 app = FastAPI()
 
 # Enable CORS for frontend integration
@@ -18,8 +20,7 @@ app.add_middleware(
 
 # --- Configuration ---
 # Use IndoBERT base as default. 
-# If you have a custom folder, replace 'indobenchmark/indobert-base-p1' with your path.
-MODEL_NAME = "indobert_extractive_model"
+MODEL_NAME = "indobert_kmeans_v2_model"
 
 print(f"Loading model {MODEL_NAME}...")
 tokenizer = BertTokenizer.from_pretrained(MODEL_NAME)
@@ -28,7 +29,7 @@ model.eval()
 
 class SummarizeRequest(BaseModel):
     text: str
-    num_sentences: int = 3
+    num_sentences: int = 0  # 0 means dynamic scaling
 
 @app.get("/")
 async def root():
@@ -46,34 +47,61 @@ async def summarize(request: SummarizeRequest):
     if not request.text.strip():
         raise HTTPException(status_code=400, detail="Text is empty")
 
-    # --- Aggressive Sentence Splitting (Optimized for Transcripts) ---
-    # We ignore punctuation and split purely by word count/chunks for long texts
     all_words = request.text.split()
     word_count = len(all_words)
     
-    sentences = []
-    # If text is long, split every 20 words to create "artificial sentences"
-    if word_count > 50:
-        for i in range(0, word_count, 20):
-            segment = " ".join(all_words[i:i + 20])
-            if segment:
-                sentences.append(segment)
+    # --- Dynamic Scaling Logic ---
+    if request.num_sentences <= 0:
+        target_num = min(15, max(3, word_count // 250))
     else:
-        # For short text, just use it as is
-        sentences = [request.text.strip()]
-    
-    # Debug print to console (you can see this in your terminal)
-    print(f"DEBUG: Processing {word_count} words into {len(sentences)} segments.")
+        target_num = request.num_sentences
 
-    if len(sentences) == 0:
+    # --- Smart Sentence Splitting ---
+    # Try splitting by punctuation first
+    input_text = request.text.strip()
+    raw_sentences = re.split(r'(?<=[.!?])\s+', input_text)
+    raw_sentences = [s.strip() for s in raw_sentences if len(s.split()) >= 3]
+
+    sentences = []
+    # If punctuation-based splitting failed to create enough segments, fallback
+    if len(raw_sentences) < 2:
+        if word_count > 50:
+            # Fallback for long text without punctuation: 30 words per segment
+            for i in range(0, word_count, 30):
+                segment = " ".join(all_words[i:i + 30])
+                if segment:
+                    sentences.append(segment)
+        else:
+            # For short text without punctuation, just use the whole thing as one segment
+            sentences = [input_text]
+    else:
+        # If segments are too long (e.g. 100+ words), break them down
+        for s in raw_sentences:
+            words = s.split()
+            if len(words) > 80:
+                for i in range(0, len(words), 50):
+                    sentences.append(" ".join(words[i:i + 50]))
+            else:
+                sentences.append(s)
+    
+    # Final safety: if for some reason sentences is still empty but we have words
+    if not sentences and word_count > 0:
+        sentences = [input_text]
+
+    print(f"DEBUG: Word count: {word_count} | Segments: {len(sentences)} | Target Points: {target_num}")
+
+    if not sentences:
         return {"summary": "", "points": []}
 
-    # If it's still effectively 1 segment, return it
-    if len(sentences) == 1:
-        return {"summary": sentences[0], "points": sentences}
+    if len(sentences) <= target_num:
+        return {
+            "summary": "... ".join(sentences) + "...",
+            "points": sentences
+        }
 
     # --- Long Document Strategy (Chunking) ---
-    CHUNK_SIZE = 15 
+    # We use a larger chunk size to ensure we cover the whole document
+    CHUNK_SIZE = max(10, len(sentences) // target_num)
     chunks = [sentences[i:i + CHUNK_SIZE] for i in range(0, len(sentences), CHUNK_SIZE)]
     
     candidate_sentences = []
@@ -83,13 +111,14 @@ async def summarize(request: SummarizeRequest):
         centroid = np.mean(embeddings, axis=0).reshape(1, -1)
         similarities = cosine_similarity(embeddings, centroid).flatten()
 
-        num_candidates = min(2, len(chunk))
+        # Pick top 2 or 3 candidates from each chunk
+        num_candidates = min(3, len(chunk))
         top_indices = np.argsort(similarities)[-num_candidates:]
         for idx in top_indices:
             candidate_sentences.append(chunk[idx])
 
     # --- Final Selection from Candidates ---
-    if len(candidate_sentences) <= request.num_sentences:
+    if len(candidate_sentences) <= target_num:
         final_sentences = candidate_sentences
     else:
         cand_embeddings = [get_sentence_embedding(s) for s in candidate_sentences]
@@ -97,7 +126,7 @@ async def summarize(request: SummarizeRequest):
         global_centroid = np.mean(cand_embeddings, axis=0).reshape(1, -1)
         global_similarities = cosine_similarity(cand_embeddings, global_centroid).flatten()
         
-        final_indices = np.argsort(global_similarities)[-request.num_sentences:]
+        final_indices = np.argsort(global_similarities)[-target_num:]
         final_indices.sort()
         final_sentences = [candidate_sentences[i] for i in final_indices]
 
