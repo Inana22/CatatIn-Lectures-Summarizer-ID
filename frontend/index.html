@@ -4,378 +4,649 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CatatIn — Asisten Belajar Suara</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
+  <!-- PDF.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
+<div class="cursor-glow" id="cursorGlow"></div>
 
-<!-- ═══════════════════════════════════════
-     LOGIN PAGE
-     ═══════════════════════════════════════ -->
-<div class="page active" id="page-login">
-
-  <div class="topbar">
-    <div class="logo">
-      <div class="logo-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
-          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-        </svg>
+<!-- ══════════════════════════════════════════
+     MODAL: TAMBAH MATA PELAJARAN
+     Muncul di mana saja ketika user klik "+"
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-add-subject" style="display:none" onclick="if(event.target===this)closeAddSubjectModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Tambah Mata Pelajaran</h3>
+      <button class="modal-close" onclick="closeAddSubjectModal()">✕</button>
+    </div>
+    <input type="hidden" id="modal-return-dropdown"/>
+    <div class="field">
+      <label>Nama Mata Pelajaran</label>
+      <div class="input-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <input type="text" placeholder="Contoh: Matematika, Biologi..." id="new-subject-name"
+          onkeydown="if(event.key==='Enter')saveNewSubject()"/>
       </div>
-      CatatIn
+    </div>
+    <div class="field">
+      <label>Ikon (Emoji)</label>
+      <div class="input-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        <input type="text" placeholder="📚" id="new-subject-icon" maxlength="4"/>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeAddSubjectModal()">Batal</button>
+      <button class="btn-primary" id="btn-save-subject" onclick="saveNewSubject()">Simpan</button>
     </div>
   </div>
+</div>
 
-  <div class="hero-split">
+<!-- ══════════════════════════════════════════
+     LOGIN PAGE
+══════════════════════════════════════════ -->
+<div class="page active" id="page-login">
+  <div class="login-wrap">
 
-    <!-- Left hero panel -->
-    <div class="hero-left">
-      <div class="hero-tag">✦ Edukasi berbasis suara</div>
-      <div class="hero-title">Belajar lebih<br/>mudah dengan<br/>suara</div>
-      <p class="hero-sub">
-        Rekam penjelasan pelajaran apapun, transkripsi otomatis,
-        lalu rangkum dengan AI — dalam hitungan detik.
-      </p>
-      <div class="hero-features">
-        <div class="feat-item">
-          <div class="feat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-            </svg>
-          </div>
-          Rekam suara real-time
+    <!-- Left Panel -->
+    <div class="login-left">
+      <div class="login-brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          </svg>
         </div>
-        <div class="feat-item">
-          <div class="feat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-            </svg>
+        <span>CatatIn</span>
+      </div>
+
+      <div class="login-headline">
+        <div class="login-tag">✦ Edukasi berbasis suara</div>
+        <h1>Belajar jadi<br/><em>lebih mudah</em><br/>dengan suara</h1>
+        <p>Rekam penjelasan, transkripsi otomatis, lalu rangkum dengan AI — dalam hitungan detik.</p>
+      </div>
+
+      <div class="login-feats">
+        <div class="feat">
+          <div class="feat-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
           </div>
-          Transkripsi otomatis akurat
+          <div><strong>Rekam Real-time</strong><span>Bicara, kami tulis otomatis</span></div>
         </div>
-        <div class="feat-item">
-          <div class="feat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
+        <div class="feat">
+          <div class="feat-icon-wrap purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           </div>
-          Rangkuman AI cerdas
+          <div><strong>Transkripsi Akurat</strong><span>Teknologi Web Speech API</span></div>
         </div>
+        <div class="feat">
+          <div class="feat-icon-wrap blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div><strong>Ringkasan AI</strong><span>Poin penting dalam sekejap</span></div>
+        </div>
+      </div>
+
+      <div class="login-stats">
+        <div class="lst-item"><span class="lst-val">10K+</span><span class="lst-label">Pengguna</span></div>
+        <div class="lst-sep"></div>
+        <div class="lst-item"><span class="lst-val">2M+</span><span class="lst-label">Kata ditranskripsi</span></div>
+        <div class="lst-sep"></div>
+        <div class="lst-item"><span class="lst-val">98%</span><span class="lst-label">Akurasi</span></div>
+      </div>
+
+      <div class="login-deco">
+        <div class="deco-ring r1"></div>
+        <div class="deco-ring r2"></div>
+        <div class="deco-ring r3"></div>
       </div>
     </div>
 
-    <!-- Login form -->
-    <div class="hero-right">
-      <div class="login-card">
-        <div class="login-header">
+    <!-- Right Panel -->
+    <div class="login-right">
+
+      <!-- LOGIN CARD -->
+      <div class="login-card" id="login-card">
+        <div class="lc-header">
           <h2>Masuk ke akun</h2>
           <p>Selamat datang kembali!</p>
         </div>
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input class="form-input" type="email" placeholder="budi@student.ac.id" id="login-email"/>
+        <div class="field">
+          <label>Email</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <input type="email" placeholder="budi@student.ac.id" id="login-email"
+              onkeydown="if(event.key==='Enter')doLogin()"/>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <input class="form-input" type="password" placeholder="••••••••" id="login-pass"/>
+        <div class="field">
+          <label>Password</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" placeholder="••••••••" id="login-pass"
+              onkeydown="if(event.key==='Enter')doLogin()"/>
+          </div>
         </div>
-        <button class="login-btn" onclick="doLogin()">Masuk</button>
-        <div class="divider-row">atau masuk dengan</div>
+        <button class="btn-login" onclick="doLogin()">
+          <span>Masuk Sekarang</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+        <div class="divider">atau masuk dengan</div>
         <div class="social-row">
-          <button class="social-btn" onclick="doLogin()">
-            <svg width="16" height="16" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
+          <button class="social-btn" onclick="showToast('Google login coming soon!','default')">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
             Google
           </button>
-          <button class="social-btn" onclick="doLogin()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="#1877F2">
-              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-            </svg>
-            Facebook
-          </button>
         </div>
-        <p class="login-footer">
-          Belum punya akun? <a href="#" onclick="doLogin()">Daftar sekarang</a>
-        </p>
+        <p class="lc-foot">Belum punya akun? <a href="#" onclick="switchToRegister(); return false;">Daftar sekarang</a></p>
       </div>
-    </div>
 
+      <!-- REGISTER CARD -->
+      <div class="login-card reg-card" id="register-card" style="display:none">
+        <div class="lc-header">
+          <h2>Buat akun baru</h2>
+          <p>Isi data diri kamu untuk memulai</p>
+        </div>
+        <div class="reg-row">
+          <div class="field">
+            <label>Nama Lengkap</label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <input type="text" placeholder="Nama lengkap kamu" id="reg-name"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>Status</label>
+            <div class="input-wrap select-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <select id="reg-role" class="input-select">
+                <option value="Mahasiswa">Mahasiswa</option>
+                <option value="Siswa SMA">Siswa SMA</option>
+                <option value="Guru/Dosen">Guru / Dosen</option>
+                <option value="Profesional">Profesional</option>
+                <option value="Lainnya">Lainnya</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="reg-row">
+          <div class="field">
+            <label>Email</label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <input type="email" placeholder="budi@student.ac.id" id="reg-email"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>Institusi</label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              <input type="text" placeholder="Universitas / Sekolah" id="reg-institusi"/>
+            </div>
+          </div>
+        </div>
+        <div class="reg-row">
+          <div class="field">
+            <label>Password</label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" placeholder="Min. 8 karakter" id="reg-pass"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>Konfirmasi Password</label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" placeholder="Ulangi password" id="reg-pass2"/>
+            </div>
+          </div>
+        </div>
+        <button class="btn-login" onclick="doRegister()">
+          <span>Daftar Sekarang</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+        <p class="lc-foot" style="margin-top:20px">Sudah punya akun? <a href="#" onclick="switchToLogin(); return false;">Masuk sekarang</a></p>
+      </div>
+
+    </div><!-- /login-right -->
   </div>
 </div><!-- /page-login -->
 
 
-<!-- ═══════════════════════════════════════
-     MAIN APP PAGE
-     ═══════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════
+     APP PAGE
+══════════════════════════════════════════ -->
 <div class="page" id="page-app">
 
-  <div class="topbar">
-    <div class="logo">
-      <div class="logo-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <div class="brand-icon sm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
           <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
         </svg>
       </div>
-      CatatIn
+      <span>CatatIn</span>
     </div>
-    <div class="nav-links">
-      <button class="nav-btn" onclick="showPage('record')">Rekam</button>
-      <button class="nav-btn" onclick="showPage('subjects')">Mata Pelajaran</button>
-      <button class="nav-btn" onclick="showPage('history')">Riwayat</button>
-      <button class="nav-btn primary" onclick="logout()">Keluar</button>
+
+    <nav class="sb-nav">
+      <div class="sb-label">Menu Utama</div>
+      <div class="sb-item active" id="nav-record" onclick="showPage('record')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        <span>Rekam Suara</span>
+        <div class="sb-indicator"></div>
+      </div>
+      <div class="sb-item" id="nav-summarize" onclick="showPage('summarize')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>Ringkas AI</span>
+        <div class="sb-indicator"></div>
+      </div>
+      <div class="sb-item" id="nav-subjects" onclick="showPage('subjects')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span>Mata Pelajaran</span>
+        <span class="sb-badge" id="subj-badge">0</span>
+        <div class="sb-indicator"></div>
+      </div>
+      <div class="sb-item" id="nav-history" onclick="showPage('history')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Riwayat</span>
+        <span class="sb-badge" id="history-count">0</span>
+        <div class="sb-indicator"></div>
+      </div>
+      <div class="sb-divider"></div>
+      <div class="sb-label">Pengaturan</div>
+      <div class="sb-item" id="nav-profile" onclick="showPage('profile')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profil</span>
+        <div class="sb-indicator"></div>
+      </div>
+    </nav>
+
+    <div class="sb-user" onclick="showPage('profile')">
+      <div class="sb-avatar" id="sb-avatar-display">?</div>
+      <div class="sb-user-info">
+        <div class="sb-user-name" id="sb-name-display">Memuat...</div>
+        <div class="sb-user-role" id="sb-role-display">—</div>
+      </div>
+      <svg class="sb-logout-icon" onclick="logout(event)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Keluar"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     </div>
-  </div>
+  </aside>
 
-  <div class="main-body">
-
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="sidebar-section-label">Menu Utama</div>
-
-      <div class="sidebar-item active" id="nav-record" onclick="showPage('record')">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-          <line x1="12" y1="19" x2="12" y2="23"/>
-          <line x1="8"  y1="23" x2="16" y2="23"/>
-        </svg>
-        Rekam Suara
+  <!-- Main Content -->
+  <main class="main-area">
+    <header class="main-header">
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="header-title" id="header-title">Rekam Suara</div>
+      <div class="header-actions">
+        <div class="header-time" id="header-time"></div>
+        <button class="btn-logout" onclick="logout(null)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Keluar
+        </button>
       </div>
-      
-      <div class="sidebar-item" id="nav-summarize" onclick="showPage('summarize')">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/>
-          <line x1="16" y1="17" x2="8" y2="17"/>
-        </svg>
-        Ringkas AI
-      </div>
+    </header>
 
-      <div class="sidebar-item" id="nav-subjects" onclick="showPage('subjects')">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-        </svg>
-        Mata Pelajaran
-        <span class="sidebar-badge">3</span>
-      </div>
-
-      <div class="sidebar-item" id="nav-history" onclick="showPage('history')">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
-        </svg>
-        Riwayat
-        <span class="sidebar-badge">12</span>
-      </div>
-
-      <div class="sidebar-section-label">Pengaturan</div>
-
-      <div class="sidebar-item">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
-        Profil
-      </div>
-
-      <div class="user-row">
-        <div class="user-avatar">BS</div>
-        <div>
-          <div class="user-name">Budi Santoso</div>
-          <div class="user-role">Mahasiswa</div>
+    <!-- ═══ PAGE: REKAM SUARA ═══ -->
+    <div class="subpage active" id="subpage-record">
+      <div class="page-hero">
+        <div class="ph-text">
+          <h2>Rekam Suara</h2>
+          <p>Transkripsi otomatis — bicara saja, kami yang catat</p>
+        </div>
+        <div class="ph-stat" id="live-stat">
+          <div class="stat-dot idle"></div>
+          <span id="live-label">Siap merekam</span>
         </div>
       </div>
-    </div><!-- /sidebar -->
 
-    <!-- Content -->
-    <div class="content" id="main-content">
-
-      <!-- ── REKAM SUARA ── -->
-      <div id="subpage-record">
-        <div class="page-title">Rekam Suara</div>
-        <div class="page-subtitle">Rekam penjelasan mata pelajaran, transkripsi otomatis &amp; rangkum dengan AI</div>
-
-        <div class="record-layout">
-
-          <!-- Left: mic + transcript -->
-          <div class="record-main">
-
-            <!-- Session bar -->
-            <div class="session-bar">
-              <div class="session-dot"></div>
-              <div class="session-info">
-                <div class="session-title-text" id="sess-title">Sesi belajar hari ini</div>
-                <div class="session-sub-text" id="sess-sub">Pilih mata pelajaran &amp; mulai rekam</div>
-              </div>
-              <div class="session-timer" id="sess-timer">00:00</div>
-            </div>
-
-            <!-- Mic card -->
-            <div class="mic-card">
-              <p class="mic-instruction" id="mic-instruction">Tekan tombol mikrofon untuk mulai merekam</p>
-
-              <div class="waveform-wrap idle" id="waveform"></div>
-
-              <div class="mic-wrap">
-                <div class="mic-ring"></div>
-                <div class="mic-ring"></div>
-                <button class="mic-btn" id="micBtn" title="Tekan untuk merekam" onclick="toggleRecording()">
-                  <svg id="icon-mic" viewBox="0 0 24 24" fill="none" stroke="#fff"
-                       stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                    <line x1="12" y1="19" x2="12" y2="23"/>
-                    <line x1="8"  y1="23" x2="16" y2="23"/>
-                  </svg>
-                  <svg id="icon-stop" viewBox="0 0 24 24" fill="#fff" style="display:none">
-                    <rect x="5" y="5" width="14" height="14" rx="3"/>
-                  </svg>
-                </button>
-              </div>
-
-              <div class="mic-status" id="micStatus">Siap mendengarkan...</div>
-
-              <div class="mic-actions">
-                <button class="mic-action-btn" onclick="copyTranscript()">Salin Transkrip</button>
-                <button class="mic-action-btn danger" onclick="clearTranscript()">Hapus</button>
+      <div class="record-grid">
+        <!-- Left: mic + transcript -->
+        <div class="record-col-main">
+          <div class="session-card" id="session-card">
+            <div class="sc-left">
+              <div class="sc-dot" id="sc-dot"></div>
+              <div>
+                <div class="sc-title" id="sess-title">Sesi belajar hari ini</div>
+                <div class="sc-sub" id="sess-sub">Pilih mata pelajaran &amp; mulai rekam</div>
               </div>
             </div>
+            <div class="sc-timer" id="sess-timer">00:00</div>
+          </div>
 
-            <!-- Transcript card -->
-            <div class="transcript-card">
-              <div class="card-label">Transkrip</div>
-              <button class="copy-btn" onclick="copyTranscript()">SALIN</button>
+          <div class="mic-card">
+            <div class="mic-ambient" id="mic-ambient"></div>
+            <p class="mic-hint" id="mic-instruction">Tekan tombol mikrofon untuk mulai merekam</p>
+            <div class="waveform-area" id="waveform"></div>
+            <button class="mic-btn" id="micBtn" onclick="toggleRecording()">
+              <div class="mic-pulse" id="mic-pulse"></div>
+              <svg id="icon-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              <svg id="icon-stop" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+            </button>
+            <div class="mic-status-row">
+              <div class="mic-status-dot" id="mic-status-dot"></div>
+              <span class="mic-status-text" id="micStatus">Siap mendengarkan...</span>
+            </div>
+            <div class="mic-actions">
+              <button class="action-btn" onclick="copyTranscript()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Salin
+              </button>
+              <button class="action-btn danger" onclick="clearTranscript()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                Hapus
+              </button>
+            </div>
+          </div>
+
+          <div class="transcript-card">
+            <div class="tc-header">
+              <div class="tc-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Transkrip
+              </div>
+              <div class="tc-right">
+                <span class="word-badge" id="wordCount">0 kata</span>
+                <button class="copy-mini" onclick="copyTranscript()">Salin</button>
+              </div>
+            </div>
+            <div class="tc-body">
               <div id="transcript-text">
                 <span class="placeholder">Transkripsi akan muncul di sini setelah Anda mulai merekam...</span>
               </div>
-              <span id="interim-text"></span>
-              <div><span class="word-badge" id="wordCount">0 kata</span></div>
+              <span id="interim-text" class="interim"></span>
+            </div>
+          </div>
+
+          <!-- TOMBOL SIMPAN (muncul setelah poin AI tersedia) -->
+          <div class="save-actions" id="save-actions-record">
+            <button class="btn-save-action" id="btn-save-record" style="display:none" onclick="saveRecording()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+              Simpan Transkrip
+            </button>
+            <button class="btn-save-action primary" id="btn-save-ai" style="display:none" onclick="saveAiPoints()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Simpan Poin AI ke Mata Pelajaran
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: subject, topic, date, AI -->
+        <div class="record-col-side">
+          <div class="side-card">
+            <div class="side-card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              Detail Sesi
             </div>
 
-          </div><!-- /record-main -->
+            <!-- Subject dropdown + tombol tambah -->
+            <div class="field-with-add">
+              <label class="field-label-sm">Mata Pelajaran</label>
+              <div class="dropdown-add-row">
+                <select class="select-field subject-dropdown" id="rec-subject-sel" onchange="updateSession()">
+                  <option value="">— Pilih mata pelajaran —</option>
+                </select>
+                <button class="btn-add-subject" onclick="openAddSubjectModal('rec-subject-sel')" title="Tambah mata pelajaran baru">+</button>
+              </div>
+            </div>
 
-          <!-- Right: subject + summary -->
-          <div class="summary-col">
+            <!-- Topik (wajib) -->
+            <div class="field-with-add" style="margin-top:12px">
+              <label class="field-label-sm">Topik Spesifik <span class="req">*</span></label>
+              <input class="text-field" placeholder="Contoh: Hukum Newton, Bab 3..." id="rec-topic" oninput="updateSession()"/>
+            </div>
 
-            <div class="info-card">
-              <h3>Mata Pelajaran</h3>
-              <select class="subject-select" id="subject-sel" onchange="updateSession()">
+            <!-- Tanggal (auto hari ini) -->
+            <div class="field-with-add" style="margin-top:12px">
+              <label class="field-label-sm">Tanggal</label>
+              <input class="text-field" type="date" id="rec-date"/>
+            </div>
+          </div>
+          
+
+          <!-- AI Poin -->
+          <div class="side-card ai-card">
+            <div class="side-card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Poin Utama AI
+            </div>
+            <div class="loading-row" id="summ-loading">
+              <div class="loader-dots"><span></span><span></span><span></span></div>
+              <span>Menganalisa...</span>
+            </div>
+            <div id="keypoints-card" class="keypoints-wrap" style="display:none">
+              <ul id="keypoints-list" class="kp-list"></ul>
+            </div>
+            <button class="btn-ai" id="summ-btn" onclick="doSummarize()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Dapatkan Poin Penting
+            </button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /subpage-record -->
+
+
+    <!-- ═══ PAGE: RINGKAS AI ═══ -->
+    <div class="subpage" id="subpage-summarize" style="display:none">
+      <div class="page-hero">
+        <div class="ph-text">
+          <h2>Ringkas dengan AI</h2>
+          <p>Tempel teks panjang atau unggah PDF — dapatkan poin penting secara instan</p>
+        </div>
+      </div>
+
+      <div class="summ-grid">
+        <!-- Input panel -->
+        <div class="summ-input-panel">
+          <div class="panel-label">Input Teks</div>
+          <textarea id="summarize-text-input" placeholder="Tempelkan teks yang ingin dirangkum di sini..."></textarea>
+
+          <div class="panel-label" style="margin-top:20px">Atau Unggah PDF</div>
+          <div class="upload-zone" id="upload-zone" onclick="document.getElementById('pdf-file').click()">
+            <input type="file" id="pdf-file" accept=".pdf" style="display:none" onchange="handleFileSelect(event)">
+            <div class="upload-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            </div>
+            <div class="upload-text" id="upload-status">Klik untuk pilih PDF atau seret file ke sini</div>
+            <div class="upload-info">Maksimal 10MB</div>
+          </div>
+
+          <div class="summ-btns">
+            <button class="btn-primary" onclick="doTextSummarize()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Rangkum Sekarang
+            </button>
+            <button class="btn-ghost" onclick="clearSummarize()">Bersihkan</button>
+          </div>
+        </div>
+
+        <!-- Output panel -->
+        <div class="summ-output-panel">
+          <div class="panel-label">Poin-poin Penting</div>
+          <div class="loading-row" id="text-summ-loading">
+            <div class="loader-dots"><span></span><span></span><span></span></div>
+            <span>Menganalisa teks...</span>
+          </div>
+          <div id="text-keypoints-card" class="keypoints-wrap" style="display:none">
+            <ul id="text-keypoints-list" class="kp-list"></ul>
+          </div>
+          <div class="output-empty" id="output-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <p>Hasil rangkuman akan muncul di sini</p>
+          </div>
+
+          <!-- Simpan ke Mata Pelajaran -->
+          <div class="summ-save-section" id="summ-save-section" style="display:none">
+            <div class="panel-label" style="margin-bottom:12px">Simpan ke Mata Pelajaran</div>
+            <div class="dropdown-add-row" style="margin-bottom:10px">
+              <select class="select-field subject-dropdown" id="summ-subject-sel">
                 <option value="">— Pilih mata pelajaran —</option>
-                <option value="Fisika">Fisika</option>
-                <option value="Teologi">Teologi &amp; Agama</option>
-                <option value="Sejarah">Sejarah</option>
               </select>
-              <input class="form-input" style="margin-top:10px;"
-                     placeholder="Topik spesifik (opsional)"
-                     id="topic-input" oninput="updateSession()"/>
+              <button class="btn-add-subject" onclick="openAddSubjectModal('summ-subject-sel')" title="Tambah mata pelajaran baru">+</button>
             </div>
-
-            <div class="info-card">
-              <h3>Poin Utama AI</h3>
-              <div class="summary-loading" id="summ-loading">
-                <div class="spinner"></div> Menganalisa...
-              </div>
-              
-              <div id="keypoints-card" style="display:none">
-                <ul class="key-points" id="keypoints-list"></ul>
-              </div>
-
-              <button class="summarize-btn" id="summ-btn" onclick="doSummarize()">
-                ✦ Dapatkan Poin Penting
-              </button>
-            </div>
-
-          </div><!-- /summary-col -->
-
-        </div><!-- /record-layout -->
-      </div><!-- /subpage-record -->
-
-
-      <!-- ── MATA PELAJARAN ── -->
-      <div id="subpage-subjects" style="display:none">
-        <div class="page-title">Mata Pelajaran</div>
-        <div class="page-subtitle">Pilih topik untuk mulai belajar</div>
-        <div class="search-bar">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input class="search-input" placeholder="Cari mata pelajaran..."
-                 oninput="filterSubjects(this.value)"/>
-        </div>
-        <div class="subjects-grid" id="subjects-grid"></div>
-      </div>
-
-
-      <!-- ── RIWAYAT ── -->
-      <div id="subpage-history" style="display:none">
-        <div class="page-title">Riwayat Rekaman</div>
-        <div class="page-subtitle">Semua sesi rekaman kamu tersimpan di sini</div>
-        <div id="history-list"></div>
-      </div>
-
-
-      <!-- ── RINGKAS TEKS & PDF ── -->
-      <div id="subpage-summarize" style="display:none">
-        <div class="page-title">Ringkas menggunakan AI</div>
-        <div class="page-subtitle">Tempel teks panjang atau unggah PDF untuk dirangkum secara otomatis</div>
-        
-        <div class="summarize-layout">
-          <div class="summarize-input-box">
-            <div class="card-label">Input Teks</div>
-            <textarea id="summarize-text-input" placeholder="Tempelkan teks yang ingin dirangkum di sini..."></textarea>
-            
-            <div class="card-label" style="margin-top:20px;">Atau Unggah PDF</div>
-            <div class="upload-zone" id="upload-zone" onclick="document.getElementById('pdf-file').click()">
-              <input type="file" id="pdf-file" accept=".pdf" style="display:none" onchange="handleFileSelect(event)">
-              <div class="upload-icon">📄</div>
-              <div class="upload-text" id="upload-status">Klik untuk pilih PDF atau seret file ke sini</div>
-              <div class="upload-info">Maksimal 10MB</div>
-            </div>
-
-            <div class="summarize-actions">
-              <button class="summarize-btn primary" onclick="doTextSummarize()">Rangkum Sekarang</button>
-              <button class="summarize-btn danger" onclick="clearSummarize()">Bersihkan</button>
-            </div>
-          </div>
-
-          <div class="summarize-output-box">
-             <div class="card-label">Poin-poin Penting</div>
-             <div class="summary-loading" id="text-summ-loading">
-                <div class="spinner"></div> Menganalisa...
-              </div>
-              
-              <div id="text-keypoints-card" style="display:none;">
-                <ul class="key-points" id="text-keypoints-list"></ul>
-              </div>
+            <input class="text-field" placeholder="Topik spesifik *" id="summ-topic" style="margin-bottom:10px"/>
+            <input class="text-field" type="date" id="summ-date" style="margin-bottom:14px"/>
+            <button class="btn-save-action primary" id="btn-summ-save" onclick="saveSummPoints()" style="display:none">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+  <span>Simpan Poin ke Mata Pelajaran</span>
+</button>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+              Simpan Poin ke Mata Pelajaran
+            </button>
           </div>
         </div>
       </div>
+    </div><!-- /subpage-summarize -->
 
-    </div><!-- /content -->
-  </div><!-- /main-body -->
+
+    <!-- ═══ PAGE: MATA PELAJARAN ═══ -->
+    <div class="subpage" id="subpage-subjects" style="display:none">
+      <div class="page-hero">
+        <div class="ph-text">
+          <h2>Mata Pelajaran</h2>
+          <p>Kelola topik dan poin penting dari setiap mata pelajaran</p>
+        </div>
+        <button class="btn-primary sm" onclick="openAddSubjectModal()">+ Tambah Mata Pelajaran</button>
+      </div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" placeholder="Cari mata pelajaran..." oninput="filterSubjects(this.value)"/>
+      </div>
+      <div class="subjects-grid" id="subjects-grid"></div>
+    </div><!-- /subpage-subjects -->
+
+
+    <!-- ═══ PAGE: RIWAYAT ═══ -->
+    <div class="subpage" id="subpage-history" style="display:none">
+      <div class="page-hero">
+        <div class="ph-text">
+          <h2>Riwayat Rekaman</h2>
+          <p>Semua sesi rekaman yang pernah disimpan</p>
+        </div>
+      </div>
+      <div id="history-list"></div>
+    </div><!-- /subpage-history -->
+
+
+    <!-- ═══ PAGE: PROFIL ═══ -->
+    <div class="subpage" id="subpage-profile" style="display:none">
+      <div class="page-hero">
+        <div class="ph-text">
+          <h2>Profil Saya</h2>
+          <p>Kelola informasi akun dan preferensi kamu</p>
+        </div>
+      </div>
+
+      <div class="profile-grid">
+        <div class="profile-card-main">
+          <div class="profile-avatar-area">
+            <div class="profile-avatar-ring">
+              <div class="profile-avatar" id="profile-avatar-display">?</div>
+            </div>
+            <button class="btn-ghost sm" onclick="document.getElementById('avatar-upload').click()">Ganti Foto</button>
+            <input type="file" id="avatar-upload" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)"/>
+          </div>
+
+          <div class="profile-form">
+            <div class="pf-row">
+              <div class="pf-field">
+                <label>Nama Lengkap</label>
+                <input type="text" id="prof-name" class="text-field"/>
+              </div>
+              <div class="pf-field">
+                <label>Status</label>
+                <select id="prof-role" class="select-field">
+                  <option value="Mahasiswa">Mahasiswa</option>
+                  <option value="Siswa SMA">Siswa SMA</option>
+                  <option value="Guru/Dosen">Guru / Dosen</option>
+                  <option value="Profesional">Profesional</option>
+                  <option value="Lainnya">Lainnya</option>
+                </select>
+              </div>
+            </div>
+            <div class="pf-row">
+              <div class="pf-field">
+                <label>Email</label>
+                <input type="email" id="prof-email" class="text-field" readonly/>
+              </div>
+              <div class="pf-field">
+                <label>Institusi</label>
+                <input type="text" id="prof-institusi" placeholder="Universitas / Sekolah" class="text-field"/>
+              </div>
+            </div>
+            <div class="pf-row">
+              <div class="pf-field full">
+                <label>Bio Singkat</label>
+                <textarea id="prof-bio" class="text-field" rows="3" placeholder="Ceritakan sedikit tentang dirimu..."></textarea>
+              </div>
+            </div>
+            <div class="pf-row">
+              <div class="pf-field">
+                <label>Bahasa Transkripsi</label>
+                <select id="pref-lang" class="select-field">
+                  <option value="id-ID" selected>Indonesia</option>
+                  <option value="en-US">English</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-primary" onclick="saveProfile()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Simpan Perubahan
+            </button>
+          </div>
+        </div>
+
+        <div class="profile-stats-col">
+          <div class="stat-card">
+            <div class="stat-icon rec">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+            </div>
+            <div class="stat-value" id="stat-sessions">0</div>
+            <div class="stat-label">Total Rekaman</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon words">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div class="stat-value" id="stat-words">0</div>
+            <div class="stat-label">Total Kata</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon subj">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
+            <div class="stat-value" id="stat-subjects">0</div>
+            <div class="stat-label">Mata Pelajaran</div>
+          </div>
+          <button class="btn-danger" onclick="logout(null)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Keluar dari Akun
+          </button>
+        </div>
+      </div>
+    </div><!-- /subpage-profile -->
+
+  </main>
 </div><!-- /page-app -->
 
-<script src="app.js"></script>
+<!-- ─── SCRIPTS (urutan penting!) ─── -->
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/supjek.js"></script>
+<script src="js/record.js"></script>
+<script src="js/summarize.js"></script>
+<script src="js/history.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
