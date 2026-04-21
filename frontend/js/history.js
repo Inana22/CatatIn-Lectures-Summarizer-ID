@@ -114,12 +114,20 @@ function _cardRecording(r, id) {
       <div class="hc-topic">${topicName}</div>
       <div class="hc-footer">
         <span class="hc-badge">${words} kata</span>
-        <button class="btn-expand" onclick="event.stopPropagation(); toggleHistoryDrawer('${id}')">
-          Lihat
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        </button>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="btn-expand" onclick="event.stopPropagation(); toggleHistoryDrawer('${id}')">
+            Lihat
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <button class="btn-hc-delete" onclick="event.stopPropagation(); confirmDeleteHistory('rec','${r.id}','${escapeAttr(topicName)}')" title="Hapus">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>`;
 }
@@ -154,12 +162,20 @@ function _cardSummTopic(t, id) {
       <div class="hc-topic">${t.name}</div>
       <div class="hc-footer">
         <span class="hc-badge ai">✦ ${points.length} poin AI</span>
-        <button class="btn-expand" onclick="event.stopPropagation(); toggleHistoryDrawer('${id}')">
-          Lihat
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        </button>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="btn-expand" onclick="event.stopPropagation(); toggleHistoryDrawer('${id}')">
+            Lihat
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <button class="btn-hc-delete" onclick="event.stopPropagation(); confirmDeleteHistory('summ','${t.id}','${escapeAttr(t.name)}')" title="Hapus">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>`;
 }
@@ -195,12 +211,20 @@ function _renderLocalGrid(items) {
         <div class="hc-topic">${h.topic || '—'}</div>
         <div class="hc-footer">
           <span class="hc-badge">${(h.wordCount||0).toLocaleString('id-ID')} kata</span>
-          <button class="btn-expand" onclick="event.stopPropagation(); toggleHistoryDrawer('local-${i}')">
-            Lihat
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </button>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button class="btn-expand" onclick="event.stopPropagation(); toggleHistoryDrawer('local-${i}')">
+              Lihat
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <button class="btn-hc-delete" onclick="event.stopPropagation(); confirmDeleteHistory('local',${i},'${escapeAttr(h.topic||'rekaman')}')" title="Hapus">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>`;
   }).join('');
@@ -271,6 +295,87 @@ function _updateHistoryBadge(count) {
   const badge = document.getElementById('history-count');
   if (badge) badge.textContent = count;
 }
+
+// ─── ESCAPE HELPER (lokal, supaya tidak depend urutan load) ───────
+function escapeAttr(str) {
+  if (!str) return '';
+  return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ─── KONFIRMASI HAPUS ─────────────────────────
+function confirmDeleteHistory(type, idOrIndex, label) {
+  let overlay = document.getElementById('history-delete-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'history-delete-overlay';
+    overlay.style.cssText = `
+      position:fixed;inset:0;background:rgba(26,10,34,0.55);
+      backdrop-filter:blur(4px);z-index:9999;
+      display:flex;align-items:center;justify-content:center;padding:20px
+    `;
+    document.body.appendChild(overlay);
+  }
+
+  overlay.innerHTML = `
+    <div style="
+      background:var(--surface,#fff);border:1px solid rgba(232,56,122,0.15);
+      border-radius:20px;padding:28px 24px;max-width:320px;width:100%;
+      text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.15)
+    ">
+      <div style="font-size:32px;margin-bottom:12px">🗑️</div>
+      <div style="font-weight:700;font-size:16px;margin-bottom:8px;color:var(--text)">Hapus dari Riwayat?</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:22px;line-height:1.6">
+        <strong>${label}</strong> akan dihapus permanen dan tidak bisa dikembalikan.
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="document.getElementById('history-delete-overlay').style.display='none'" style="
+          flex:1;padding:11px;border-radius:10px;
+          border:1.5px solid rgba(232,56,122,0.2);
+          background:transparent;color:var(--text);cursor:pointer;
+          font-size:14px;font-family:inherit
+        ">Batal</button>
+        <button onclick="executeDeleteHistory('${type}','${idOrIndex}')" style="
+          flex:1;padding:11px;border-radius:10px;border:none;
+          background:#e05060;color:#fff;cursor:pointer;
+          font-size:14px;font-weight:700;font-family:inherit
+        ">Hapus</button>
+      </div>
+    </div>`;
+  overlay.style.display = 'flex';
+}
+
+async function executeDeleteHistory(type, idOrIndex) {
+  const overlay = document.getElementById('history-delete-overlay');
+  if (overlay) overlay.style.display = 'none';
+
+  try {
+    if (type === 'rec') {
+      // Hapus dari tabel recordings
+      await sbDeleteRecording(idOrIndex);
+      showToast('Rekaman berhasil dihapus!', 'success');
+
+    } else if (type === 'summ') {
+      // Hapus topic (ai_points cascade)
+      await sbDeleteTopic(idOrIndex);
+      showToast('Ringkasan AI berhasil dihapus!', 'success');
+
+    } else if (type === 'local') {
+      // Hapus dari localStorage
+      const local = JSON.parse(localStorage.getItem('catatIn_local_history') || '[]');
+      local.splice(parseInt(idOrIndex), 1);
+      localStorage.setItem('catatIn_local_history', JSON.stringify(local));
+      showToast('Rekaman lokal berhasil dihapus!', 'success');
+    }
+
+    // Refresh halaman history
+    await renderHistory();
+
+  } catch (e) {
+    showToast('Gagal menghapus: ' + e.message, 'error');
+    console.error('Delete history error:', e);
+  }
+}
+
 async function clearHistory() {
   showToast('Gunakan Supabase dashboard untuk hapus data server.', 'default');
 }

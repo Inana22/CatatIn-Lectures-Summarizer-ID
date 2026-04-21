@@ -226,7 +226,11 @@ function _saveToLocalFallback() {
   if (!finalTranscript.trim()) return;
   const subjectEl = document.getElementById('rec-subject-sel');
   const topicEl   = document.getElementById('rec-topic');
-  const subjName  = subjectEl?.options[subjectEl.selectedIndex]?.text || 'Umum';
+  // FIX: cek value dulu — kalau kosong/placeholder, pakai 'Umum' biar tidak buat ghost subject saat sync
+  const subjVal   = subjectEl?.value?.trim();
+  const subjName  = subjVal
+    ? (subjectEl?.options[subjectEl.selectedIndex]?.text || 'Umum')
+    : 'Umum';
   const topicName = topicEl?.value.trim() || '—';
 
   const entry = {

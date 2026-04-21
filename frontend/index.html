@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CatatIn — Asisten Belajar Suara</title>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
   <!-- PDF.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
@@ -299,13 +299,20 @@
     <!-- ═══ PAGE: REKAM SUARA ═══ -->
     <div class="subpage active" id="subpage-record">
       <div class="page-hero">
-        <div class="ph-text">
-          <h2>Rekam Suara</h2>
-          <p>Transkripsi otomatis — bicara saja, kami yang catat</p>
-        </div>
-        <div class="ph-stat" id="live-stat">
-          <div class="stat-dot idle"></div>
-          <span id="live-label">Siap merekam</span>
+        <div class="ph-bar"></div>
+        <div class="ph-inner">
+          <div class="ph-text">
+            <h2>Rekam Suara</h2>
+            <p>Transkripsi otomatis — bicara saja, kami yang catat</p>
+          </div>
+          <div class="ph-chips">
+            <span class="ph-chip">Real-time</span>
+            <span class="ph-chip">AI Powered</span>
+            <div class="ph-stat" id="live-stat">
+              <div class="stat-dot idle"></div>
+              <span id="live-label">Siap merekam</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -439,9 +446,16 @@
     <!-- ═══ PAGE: RINGKAS AI ═══ -->
     <div class="subpage" id="subpage-summarize" style="display:none">
       <div class="page-hero">
-        <div class="ph-text">
-          <h2>Ringkas dengan AI</h2>
-          <p>Tempel teks panjang atau unggah PDF — dapatkan poin penting secara instan</p>
+        <div class="ph-bar"></div>
+        <div class="ph-inner">
+          <div class="ph-text">
+            <h2>Ringkas dengan AI</h2>
+            <p>Tempel teks panjang atau unggah PDF — dapatkan poin penting secara instan</p>
+          </div>
+          <div class="ph-chips">
+            <span class="ph-chip">Teks & PDF</span>
+            <span class="ph-chip">AI Powered</span>
+          </div>
         </div>
       </div>
 
@@ -497,11 +511,8 @@
             <input class="text-field" placeholder="Topik spesifik *" id="summ-topic" style="margin-bottom:10px"/>
             <input class="text-field" type="date" id="summ-date" style="margin-bottom:14px"/>
             <button class="btn-save-action primary" id="btn-summ-save" onclick="saveSummPoints()" style="display:none">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
-  <span>Simpan Poin ke Mata Pelajaran</span>
-</button>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
-              Simpan Poin ke Mata Pelajaran
+              <span>Simpan Poin ke Mata Pelajaran</span>
             </button>
           </div>
         </div>
@@ -512,11 +523,17 @@
     <!-- ═══ PAGE: MATA PELAJARAN ═══ -->
     <div class="subpage" id="subpage-subjects" style="display:none">
       <div class="page-hero">
-        <div class="ph-text">
-          <h2>Mata Pelajaran</h2>
-          <p>Kelola topik dan poin penting dari setiap mata pelajaran</p>
+        <div class="ph-bar"></div>
+        <div class="ph-inner">
+          <div class="ph-text">
+            <h2>Mata Pelajaran</h2>
+            <p>Kelola topik dan poin penting dari setiap mata pelajaran</p>
+          </div>
+          <div class="ph-chips">
+            <span class="ph-chip">Organisasi Materi</span>
+            <button class="btn-primary sm" onclick="openAddSubjectModal()">+ Tambah</button>
+          </div>
         </div>
-        <button class="btn-primary sm" onclick="openAddSubjectModal()">+ Tambah Mata Pelajaran</button>
       </div>
       <div class="search-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -529,9 +546,15 @@
     <!-- ═══ PAGE: RIWAYAT ═══ -->
     <div class="subpage" id="subpage-history" style="display:none">
       <div class="page-hero">
-        <div class="ph-text">
-          <h2>Riwayat Rekaman</h2>
-          <p>Semua sesi rekaman yang pernah disimpan</p>
+        <div class="ph-bar"></div>
+        <div class="ph-inner">
+          <div class="ph-text">
+            <h2>Riwayat Rekaman</h2>
+            <p>Semua sesi rekaman yang pernah disimpan</p>
+          </div>
+          <div class="ph-chips">
+            <span class="ph-chip">Tersimpan</span>
+          </div>
         </div>
       </div>
       <div id="history-list"></div>
@@ -541,9 +564,15 @@
     <!-- ═══ PAGE: PROFIL ═══ -->
     <div class="subpage" id="subpage-profile" style="display:none">
       <div class="page-hero">
-        <div class="ph-text">
-          <h2>Profil Saya</h2>
-          <p>Kelola informasi akun dan preferensi kamu</p>
+        <div class="ph-bar"></div>
+        <div class="ph-inner">
+          <div class="ph-text">
+            <h2>Profil Saya</h2>
+            <p>Kelola informasi akun dan preferensi kamu</p>
+          </div>
+          <div class="ph-chips">
+            <span class="ph-chip">Pengaturan</span>
+          </div>
         </div>
       </div>
 

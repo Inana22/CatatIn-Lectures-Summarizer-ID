@@ -277,6 +277,23 @@ async function sbSyncLocalEntry(userId, entry) {
   }
   return true;
 }
+async function sbDeleteRecording(recordingId) {
+  const { error } = await _sb
+    .from('recordings')
+    .delete()
+    .eq('id', recordingId);
+  if (error) throw error;
+}
+
+async function sbDeleteTopic(topicId) {
+  // ai_points akan ikut terhapus via CASCADE di DB
+  const { error } = await _sb
+    .from('topics')
+    .delete()
+    .eq('id', topicId);
+  if (error) throw error;
+}
+
 async function sbGetRecordingsByTopic(topicId) {
   const { data, error } = await _sb
     .from('recordings')
