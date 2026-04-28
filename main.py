@@ -20,7 +20,7 @@ app.add_middleware(
 
 # --- Configuration ---
 # Use IndoBERT base as default. 
-MODEL_NAME = "indobert_kmeans_v2_model"
+MODEL_NAME = "indobert_textrank_model"
 
 print(f"Loading model {MODEL_NAME}...")
 tokenizer = BertTokenizer.from_pretrained(MODEL_NAME)
