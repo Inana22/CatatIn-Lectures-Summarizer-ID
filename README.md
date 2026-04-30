@@ -15,7 +15,7 @@
 
 ## Deskripsi
 
-**CatatIn** adalah aplikasi web untuk merekam, menyimpan, dan merangkum catatan kuliah/materi secara otomatis menggunakan model NLP berbahasa Indonesia — **IndoBERT**. Dilengkapi sistem autentikasi pengguna, manajemen mata pelajaran, dan fitur AI summarization berbasis TextRank + KMeans clustering.
+**CatatIn** adalah aplikasi web untuk merekam, menyimpan, dan merangkum catatan kuliah/materi secara otomatis menggunakan model NLP berbahasa Indonesia, **IndoBERT**. Dilengkapi sistem autentikasi pengguna, manajemen mata pelajaran, dan fitur AI summarization berbasis TextRank + KMeans clustering.
 
 ---
 
@@ -67,7 +67,6 @@ CatatIn/
 │
 ├── main.py                             # Backend API (Python/FastAPI)
 ├── requirements.txt                    # Dependensi Python
-├── cobamic.html                        # Business Model Canvas (web view)
 ├── .gitignore
 ├── .gitattributes                      # Konfigurasi Git LFS
 └── README.md
@@ -220,6 +219,7 @@ const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
 const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
 const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
 ```
+Pastikan tambakan file .env anda sendiri 
 
 ### 5. Jalankan Backend
 
@@ -285,15 +285,26 @@ Scoring  Clustering
 | Joy Eau Dia | Backend Database|
 | Silvanus Alvan, Joy Eau Dia & Fiolita Chresia Putri | data extraction (ekstraksi data) atau web scraping |
 
-> *Proyek ini dikembangkan sebagai Final Project mata kuliah NLP — Institut Teknologi Bandung, Kelompok 1*
+> *Proyek ini dikembangkan sebagai Final Project mata kuliah NLP, Kelompok 1*
 
 ---
 
 ## Lisensi
 
-Proyek ini dilisensikan di bawah [UPH License](LICENSE).
+Proyek ini dilisensikan di bawah [XXX](LICENSE).
 
 ---
+
+##  Harapan & Visi Pengembangan
+
+Kami dari tim pengembang **CatatIn** memiliki harapan besar agar proyek ini tidak hanya berhenti sebagai pemenuhan tugas akademik, tetapi dapat bertransformasi menjadi solusi nyata yang bermanfaat bagi masyarakat luas.
+
+Besar keinginan kami agar ke depannya **CatatIn** dapat terus dikembangkan menjadi alat bantu inklusif, khususnya bagi **teman-teman tuna rungu**. Kami berharap fitur transkripsi *real-time* dan ringkasan otomatis ini dapat membantu mereka dalam:
+*   **Mengakses Informasi:** Memahami materi kuliah atau diskusi secara langsung melalui teks yang akurat.
+*   **Kesetaraan Belajar:** Menghilangkan batasan pendengaran sehingga setiap individu memiliki peluang yang sama untuk berkembang.
+*   **Kemandirian:** Menjadi asisten setia yang menjembatani komunikasi di berbagai situasi sosial maupun profesional.
+
+Kami percaya bahwa teknologi terbaik adalah teknologi yang mampu merangkul semua orang. Melalui **CatatIn**, kami berkomitmen untuk memastikan bahwa tidak ada suara yang terabaikan dan tidak ada semangat yang terbatas oleh hambatan aksesibilitas.
 
 <div align="center">
 Dibuat dengan ❤️ oleh Tim CatatIn
