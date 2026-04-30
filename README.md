@@ -220,6 +220,7 @@ const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
 const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
 const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
 ```
+Pastikan tambakan file .env anda sendiri 
 
 ### 5. Jalankan Backend
 
