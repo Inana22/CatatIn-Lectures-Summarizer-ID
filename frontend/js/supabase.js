@@ -5,9 +5,7 @@
 // ══════════════════════════════════════════════
 
 // ─────────────────────────────────────────────
-//  ⚙️  KONFIGURASI — ISI DI SINI
-//  Dapatkan dari: Supabase Dashboard →
-//  Project Settings → API
+//  ⚙️  KONFIGURASI
 // ─────────────────────────────────────────────
 const SUPABASE_URL  = 'https://vevpxvzkyppzvhsmwrtk.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZldnB4dnpreXBwenZoc213cnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTMxNzcsImV4cCI6MjA5MjE2OTE3N30.EvSKjyw6j2M2qyofPVnBzHapK75Ymr43-VvRYIGIqtM';
@@ -19,11 +17,73 @@ const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 //  AUTH
 // ══════════════════════════════════════════════
 
+/**
+ * PERBAIKAN UTAMA:
+ * Menggunakan RPC function yang query langsung ke auth.users,
+ * bukan ke tabel profiles yang belum tentu terisi.
+ * 
+ * WAJIB: Jalankan SQL berikut di Supabase SQL Editor dulu:
+ * 
+ * CREATE OR REPLACE FUNCTION check_email_exists(p_email TEXT)
+ * RETURNS BOOLEAN
+ * LANGUAGE plpgsql
+ * SECURITY DEFINER
+ * AS $$
+ * BEGIN
+ *   RETURN EXISTS (
+ *     SELECT 1 FROM auth.users
+ *     WHERE LOWER(email) = LOWER(p_email)
+ *   );
+ * END;
+ * $$;
+ */
+async function sbCheckEmailExists(email) {
+  try {
+    const { data, error } = await _sb.rpc('check_email_exists', {
+      p_email: email.toLowerCase().trim()
+    });
+
+    if (error) {
+      console.error('sbCheckEmailExists RPC error:', error);
+      // Jika RPC belum dibuat, fallback ke cek profiles
+      return await _sbCheckEmailFallback(email);
+    }
+
+    return data === true;
+  } catch (e) {
+    console.error('sbCheckEmailExists exception:', e);
+    return false;
+  }
+}
+
+// Fallback: cek tabel profiles jika RPC belum tersedia
+async function _sbCheckEmailFallback(email) {
+  try {
+    const { data, error } = await _sb
+      .from('profiles')
+      .select('id')
+      .eq('email', email.toLowerCase().trim())
+      .maybeSingle();
+
+    if (error && error.code !== 'PGRST116') {
+      console.warn('Fallback email check error:', error);
+      return false;
+    }
+
+    return data !== null;
+  } catch (e) {
+    console.warn('Fallback email check exception:', e);
+    return false;
+  }
+}
+
 async function sbSignUp(email, password, meta) {
   return _sb.auth.signUp({
     email,
     password,
-    options: { data: meta }
+    options: {
+      data: meta
+    }
   });
 }
 
@@ -41,8 +101,6 @@ async function sbGetSession() {
 }
 
 function sbOnAuthChange(callback) {
-  // onAuthStateChange sudah otomatis fire INITIAL_SESSION saat pertama load
-  // Tidak perlu getSession() terpisah — satu listener sudah cukup
   _sb.auth.onAuthStateChange((_event, session) => {
     callback(session);
   });
@@ -74,7 +132,6 @@ async function sbAddSubject(userId, name, icon = '📚') {
 }
 
 async function sbDeleteSubject(subjectId) {
-  // CASCADE di DB akan hapus topics → recordings + ai_points secara otomatis
   const { error } = await _sb
     .from('subjects')
     .delete()
@@ -143,6 +200,25 @@ async function sbGetRecordings(userId) {
   return data;
 }
 
+async function sbDeleteRecording(recordingId) {
+  const { error } = await _sb
+    .from('recordings')
+    .delete()
+    .eq('id', recordingId);
+  if (error) throw error;
+}
+
+async function sbGetRecordingsByTopic(topicId) {
+  const { data, error } = await _sb
+    .from('recordings')
+    .select('transcript, word_count, duration_seconds')
+    .eq('topic_id', topicId)
+    .order('created_at', { ascending: false })
+    .limit(1);
+  if (error) throw error;
+  return data || [];
+}
+
 
 // ══════════════════════════════════════════════
 //  AI POINTS
@@ -184,7 +260,6 @@ async function sbGetProfile(userId) {
     .select('*')
     .eq('id', userId)
     .single();
-  // PGRST116 = row not found (belum ada profil), bukan error fatal
   if (error && error.code !== 'PGRST116') throw error;
   return data;
 }
@@ -205,7 +280,7 @@ async function sbUpsertProfile(userId, profileData) {
 
 
 // ══════════════════════════════════════════════
-//  STATS  (untuk halaman Profil)
+//  STATS & HISTORY
 // ══════════════════════════════════════════════
 
 async function sbGetStats(userId) {
@@ -228,7 +303,7 @@ async function sbGetStats(userId) {
     totalWords
   };
 }
-// ── TOPICS WITH AI POINTS (untuk history dari summarize) ──
+
 async function sbGetTopicsWithPoints(userId) {
   const { data, error } = await _sb
     .from('topics')
@@ -240,16 +315,25 @@ async function sbGetTopicsWithPoints(userId) {
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
   if (error) throw error;
-  // Hanya tampilkan topik yang punya poin AI dari summarize
-  // (yang dari record sudah masuk recordings)
   return data.filter(t =>
     t.ai_points?.some(p => p.source === 'summarize')
   );
 }
 
-// ── SYNC LOCAL → SUPABASE ──────────────────────
+async function sbDeleteTopic(topicId) {
+  const { error } = await _sb
+    .from('topics')
+    .delete()
+    .eq('id', topicId);
+  if (error) throw error;
+}
+
+
+// ══════════════════════════════════════════════
+//  SYNC LOCAL → SUPABASE
+// ══════════════════════════════════════════════
+
 async function sbSyncLocalEntry(userId, entry) {
-  // Cari atau pakai subject pertama yang namanya cocok
   const { data: subjects } = await _sb
     .from('subjects')
     .select('id, name')
@@ -259,7 +343,6 @@ async function sbSyncLocalEntry(userId, entry) {
     s => s.name.toLowerCase() === entry.subject.toLowerCase()
   )?.id;
 
-  // Kalau tidak ketemu, buat subject baru
   if (!subjectId) {
     const { data: newSubj } = await _sb
       .from('subjects')
@@ -276,31 +359,4 @@ async function sbSyncLocalEntry(userId, entry) {
     await sbSaveAiPoints(userId, topic.id, entry.aiPoints, 'record');
   }
   return true;
-}
-async function sbDeleteRecording(recordingId) {
-  const { error } = await _sb
-    .from('recordings')
-    .delete()
-    .eq('id', recordingId);
-  if (error) throw error;
-}
-
-async function sbDeleteTopic(topicId) {
-  // ai_points akan ikut terhapus via CASCADE di DB
-  const { error } = await _sb
-    .from('topics')
-    .delete()
-    .eq('id', topicId);
-  if (error) throw error;
-}
-
-async function sbGetRecordingsByTopic(topicId) {
-  const { data, error } = await _sb
-    .from('recordings')
-    .select('transcript, word_count, duration_seconds')
-    .eq('topic_id', topicId)
-    .order('created_at', { ascending: false })
-    .limit(1);
-  if (error) throw error;
-  return data || [];
 }

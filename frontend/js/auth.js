@@ -1,18 +1,16 @@
 // ══════════════════════════════════════════════
 //  auth.js — CatatIn
 //  Login, register, logout, session handling
-//  + OTP verification via EmailJS
+//  + OTP verification via EmailJS & Duplicate Email Check
 // ══════════════════════════════════════════════
 
 // ─── CONFIG EMAILJS ───────────────────────────
-// Ganti 3 nilai ini dengan milik kamu (lihat setup-guide.md)
 const EMAILJS_PUBLIC_KEY  = 'l0Rip2Yk6TklckB0W';
 const EMAILJS_SERVICE_ID  = 'service_a468mtw';
 const EMAILJS_TEMPLATE_ID = 'template_ut0bp6x';
 
 let currentUser = null;
 let pendingOTP  = null;
-// pendingOTP = { code, email, name, role, inst, pass, expires, timer }
 
 // ─── INIT AUTH LISTENER ───────────────────────
 function initAuth() {
@@ -76,7 +74,7 @@ async function doLogin() {
   }
 }
 
-// ─── REGISTER ─────────────────────────────────
+// ─── REGISTER (WITH EMAIL CHECK — FIXED) ──────
 async function doRegister() {
   const name  = document.getElementById('reg-name').value.trim();
   const role  = document.getElementById('reg-role').value;
@@ -85,6 +83,7 @@ async function doRegister() {
   const pass  = document.getElementById('reg-pass').value;
   const pass2 = document.getElementById('reg-pass2').value;
 
+  // Validasi Input
   if (!name)           { showToast('Masukkan nama lengkap!', 'error'); return; }
   if (!email)          { showToast('Masukkan email!', 'error'); return; }
   if (pass.length < 8) { showToast('Password minimal 8 karakter!', 'error'); return; }
@@ -92,12 +91,35 @@ async function doRegister() {
 
   const btn = document.querySelector('#register-card .btn-login');
   btn.disabled = true;
-  btn.querySelector('span').textContent = 'Mengirim kode...';
-
-  // Generate OTP 6 digit
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  btn.querySelector('span').textContent = 'Mengecek email...';
 
   try {
+    // ─── PERBAIKAN: cek email via RPC langsung ke auth.users ───
+    let isExist = false;
+
+    try {
+      isExist = await sbCheckEmailExists(email);
+    } catch (checkErr) {
+      // Jika fungsi cek sendiri error, HENTIKAN proses (jangan kirim OTP)
+      console.error('Gagal mengecek email:', checkErr);
+      showToast('Gagal memverifikasi email. Coba lagi!', 'error');
+      btn.disabled = false;
+      btn.querySelector('span').textContent = 'Daftar Sekarang';
+      return;
+    }
+
+    // Blokir total jika email sudah ada
+    if (isExist) {
+      showToast('Email sudah terdaftar! Silakan login atau gunakan email lain.', 'error');
+      btn.disabled = false;
+      btn.querySelector('span').textContent = 'Daftar Sekarang';
+      return; // ← STOP: tidak lanjut ke OTP
+    }
+
+    // ─── Email aman, lanjut generate & kirim OTP ───────────────
+    btn.querySelector('span').textContent = 'Mengirim kode...';
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
       to_email:  email,
       to_name:   name,
@@ -105,10 +127,14 @@ async function doRegister() {
     });
 
     pendingOTP = {
-      code: otp,
-      email, name, role, inst, pass,
-      expires: Date.now() + 5 * 60 * 1000, // 5 menit
-      timer: null,
+      code:    otp,
+      email,
+      name,
+      role,
+      inst,
+      pass,
+      expires: Date.now() + 5 * 60 * 1000,
+      timer:   null,
     };
 
     showToast('Kode OTP dikirim ke email kamu!', 'success');
@@ -116,7 +142,8 @@ async function doRegister() {
     startOTPTimer();
 
   } catch (e) {
-    showToast('Gagal mengirim kode. Coba lagi!', 'error');
+    console.error(e);
+    showToast('Terjadi kesalahan. Coba lagi!', 'error');
   } finally {
     btn.disabled = false;
     btn.querySelector('span').textContent = 'Daftar Sekarang';
@@ -130,11 +157,9 @@ function switchToOTP(email) {
   card.style.display = 'block';
   document.getElementById('otp-email-display').textContent = email;
 
-  // Reset semua digit input
   document.querySelectorAll('.otp-digit').forEach(i => i.value = '');
   document.querySelector('.otp-digit').focus();
 
-  // Reset resend button
   const resendBtn = document.getElementById('btn-resend-otp');
   resendBtn.disabled = true;
   resendBtn.textContent = 'Kirim Ulang';
@@ -146,7 +171,7 @@ function switchToOTP(email) {
 function startOTPTimer() {
   if (pendingOTP.timer) clearInterval(pendingOTP.timer);
 
-  let seconds = 300; // 5 menit
+  let seconds = 300;
   updateOTPTimerUI(seconds);
 
   pendingOTP.timer = setInterval(() => {
@@ -167,7 +192,6 @@ function updateOTPTimerUI(seconds) {
   el.textContent = seconds > 0 ? `${m}:${s}` : 'Kadaluarsa';
 }
 
-// ─── OTP: AMBIL NILAI ─────────────────────────
 function getOTPValue() {
   return Array.from(document.querySelectorAll('.otp-digit'))
     .map(i => i.value).join('');
@@ -177,7 +201,7 @@ function getOTPValue() {
 async function verifyOTP() {
   const entered = getOTPValue();
 
-  if (entered.length < 6) { showToast('Masukkan 6 digit kode!', 'error'); return; }
+  if (entered.length < 6) { return; }
 
   if (!pendingOTP) {
     showToast('Sesi kadaluarsa. Silakan daftar ulang.', 'error');
@@ -194,7 +218,6 @@ async function verifyOTP() {
 
   if (entered !== pendingOTP.code) {
     showToast('Kode salah! Coba lagi.', 'error');
-    // Shake animation pada digit inputs
     document.querySelectorAll('.otp-digit').forEach(i => {
       i.classList.add('otp-shake');
       setTimeout(() => i.classList.remove('otp-shake'), 500);
@@ -204,7 +227,6 @@ async function verifyOTP() {
     return;
   }
 
-  // ✓ OTP benar → daftar ke Supabase
   const btn = document.getElementById('btn-verify-otp');
   btn.disabled = true;
   btn.querySelector('span').textContent = 'Membuat akun...';
@@ -262,7 +284,6 @@ async function resendOTP() {
   btn.textContent = 'Kirim Ulang';
 }
 
-// ─── OTP: KEMBALI KE REGISTER ─────────────────
 function backToRegister() {
   clearOTPState();
   document.getElementById('otp-card').style.display = 'none';
@@ -276,21 +297,18 @@ function clearOTPState() {
   pendingOTP = null;
 }
 
-// ─── OTP: INPUT UX (auto-advance, backspace, paste) ───
+// ─── OTP: INPUT UX ────────────────────────────
 function initOTPInputs() {
   const inputs = document.querySelectorAll('.otp-digit');
 
   inputs.forEach((input, idx) => {
-    // Hanya terima angka, auto-advance ke input berikutnya
     input.addEventListener('input', (e) => {
       const val = e.target.value.replace(/\D/g, '').slice(-1);
       e.target.value = val;
       if (val && idx < inputs.length - 1) inputs[idx + 1].focus();
-      // Auto-verify kalau sudah 6 digit
       if (getOTPValue().length === 6) verifyOTP();
     });
 
-    // Backspace: kembali ke input sebelumnya
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Backspace' && !input.value && idx > 0) {
         inputs[idx - 1].value = '';
@@ -298,14 +316,13 @@ function initOTPInputs() {
       }
     });
 
-    // Paste: tempel langsung ke semua input sekaligus
     input.addEventListener('paste', (e) => {
       e.preventDefault();
       const text = (e.clipboardData || window.clipboardData)
         .getData('text').replace(/\D/g, '').slice(0, 6);
       text.split('').forEach((c, i) => { if (inputs[i]) inputs[i].value = c; });
       const last = Math.min(text.length, inputs.length - 1);
-      inputs[last].focus();
+      if (inputs[last]) inputs[last].focus();
       if (text.length === 6) verifyOTP();
     });
   });
