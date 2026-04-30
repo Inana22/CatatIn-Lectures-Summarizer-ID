@@ -1,6 +1,6 @@
 <div align="center">
 
-# 📓 CatatIn
+# CatatIn
 
 **Aplikasi pencatatan cerdas berbasis web dengan AI summarization menggunakan IndoBERT**
 
@@ -13,27 +13,27 @@
 
 ---
 
-## 📌 Deskripsi
+## Deskripsi
 
 **CatatIn** adalah aplikasi web untuk merekam, menyimpan, dan merangkum catatan kuliah/materi secara otomatis menggunakan model NLP berbahasa Indonesia — **IndoBERT**. Dilengkapi sistem autentikasi pengguna, manajemen mata pelajaran, dan fitur AI summarization berbasis TextRank + KMeans clustering.
 
 ---
 
-## ✨ Fitur Utama
+## Fitur Utama
 
 | Fitur | Deskripsi |
 |-------|-----------|
-| 🎙️ **Perekaman & Transkripsi** | Rekam suara dan simpan transkrip secara otomatis |
-| 🤖 **AI Summarization** | Rangkum catatan menggunakan IndoBERT + TextRank |
-| 📚 **Manajemen Mata Pelajaran** | Kelola subjek dan topik catatan |
-| 🔐 **Autentikasi Aman** | Login/register dengan verifikasi OTP via email |
-| 📊 **Statistik Belajar** | Pantau jumlah rekaman dan kata yang dicatat |
-| 📜 **Riwayat Catatan** | Akses kembali semua catatan dan rangkuman |
-| 👤 **Profil Pengguna** | Kelola data diri dan institusi |
+|  **Perekaman & Transkripsi** | Rekam suara dan simpan transkrip secara otomatis |
+|  **AI Summarization** | Rangkum catatan menggunakan IndoBERT + TextRank |
+|  **Manajemen Mata Pelajaran** | Kelola subjek dan topik catatan |
+|  **Autentikasi Aman** | Login/register dengan verifikasi OTP via email |
+|  **Statistik Belajar** | Pantau jumlah rekaman dan kata yang dicatat |
+|  **Riwayat Catatan** | Akses kembali semua catatan dan rangkuman |
+|  **Profil Pengguna** | Kelola data diri dan institusi |
 
 ---
 
-## 🗂️ Struktur Proyek
+##  Struktur Proyek
 
 ```
 CatatIn/
@@ -75,31 +75,31 @@ CatatIn/
 
 ---
 
-## 🛠️ Teknologi yang Digunakan
+## Teknologi yang Digunakan
 
 ### Frontend
-- **HTML5 / CSS3 / Vanilla JavaScript** — Antarmuka pengguna tanpa framework
-- **Supabase JS Client** — Autentikasi & database realtime
-- **EmailJS** — Pengiriman OTP via email
+- **HTML5 / CSS3 / Vanilla JavaScript** => Antarmuka pengguna tanpa framework
+- **Supabase JS Client** => Autentikasi & database realtime
+- **EmailJS** => Pengiriman OTP via email
 
 ### Backend
-- **Python 3.9+** — Server backend
-- **FastAPI** — REST API framework
-- **Transformers (HuggingFace)** — Inferensi model IndoBERT
-- **PyTorch** — Deep learning runtime
+- **Python 3.9+** => Server backend
+- **FastAPI** => REST API framework
+- **Transformers (HuggingFace)** => Inferensi model IndoBERT
+- **PyTorch** => Deep learning runtime
 
 ### Database & Auth
-- **Supabase (PostgreSQL)** — Database cloud + autentikasi
-- **Row Level Security (RLS)** — Keamanan data per pengguna
+- **Supabase (PostgreSQL)** => Database cloud + autentikasi
+- **Row Level Security (RLS)** => Keamanan data per pengguna
 
 ### AI / NLP
-- **IndoBERT** — Model bahasa Indonesia pre-trained
-- **TextRank** — Extractive summarization
-- **KMeans Clustering** — Pengelompokan poin-poin penting
+- **IndoBERT** => Model bahasa Indonesia pre-trained
+- **TextRank** => Extractive summarization
+- **KMeans Clustering** => Pengelompokan poin-poin penting
 
 ---
 
-## ⚙️ Cara Instalasi & Menjalankan
+## Cara Instalasi & Menjalankan
 
 ### Prasyarat
 - Python 3.9 atau lebih baru
@@ -235,7 +235,7 @@ Buka `frontend/index.html` di browser, atau gunakan Live Server (VS Code).
 
 ---
 
-## 📐 Skema Database
+## Skema Database
 
 ```
 auth.users (Supabase built-in)
@@ -249,7 +249,7 @@ auth.users (Supabase built-in)
 
 ---
 
-## 🧠 Alur Kerja AI Summarization
+## Alur Kerja AI Summarization
 
 ```
 Transkrip Rekaman
@@ -276,21 +276,22 @@ Scoring  Clustering
 
 ---
 
-## 👥 Tim Pengembang
+##  Tim Pengembang
 
 | Nama | Peran |
 |------|-------|
-| — | Frontend Developer |
-| — | Backend & NLP Engineer |
-| — | Database & Deployment |
+| Joy Eau Dia & Karina Amalia Herferi | Frontend Developer |
+| Karina Amalia Herferi & Silvanus Alvan | Model Development & Training |
+| Joy Eau Dia | Backend Database|
+| Silvanus Alvan, Joy Eau Dia & Fiolita Chresia Putri | data extraction (ekstraksi data) atau web scraping |
 
 > *Proyek ini dikembangkan sebagai Final Project mata kuliah NLP — Institut Teknologi Bandung, Kelompok 1*
 
 ---
 
-## 📄 Lisensi
+## Lisensi
 
-Proyek ini dilisensikan di bawah [MIT License](LICENSE).
+Proyek ini dilisensikan di bawah [UPH License](LICENSE).
 
 ---
 
