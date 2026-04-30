@@ -15,7 +15,7 @@
 
 ## Deskripsi
 
-**CatatIn** adalah aplikasi web untuk merekam, menyimpan, dan merangkum catatan kuliah/materi secara otomatis menggunakan model NLP berbahasa Indonesia — **IndoBERT**. Dilengkapi sistem autentikasi pengguna, manajemen mata pelajaran, dan fitur AI summarization berbasis TextRank + KMeans clustering.
+**CatatIn** adalah aplikasi web untuk merekam, menyimpan, dan merangkum catatan kuliah/materi secara otomatis menggunakan model NLP berbahasa Indonesia, **IndoBERT**. Dilengkapi sistem autentikasi pengguna, manajemen mata pelajaran, dan fitur AI summarization berbasis TextRank + KMeans clustering.
 
 ---
 
@@ -286,7 +286,7 @@ Scoring  Clustering
 | Joy Eau Dia | Backend Database|
 | Silvanus Alvan, Joy Eau Dia & Fiolita Chresia Putri | data extraction (ekstraksi data) atau web scraping |
 
-> *Proyek ini dikembangkan sebagai Final Project mata kuliah NLP — Institut Teknologi Bandung, Kelompok 1*
+> *Proyek ini dikembangkan sebagai Final Project mata kuliah NLP, Kelompok 1*
 
 ---
 
