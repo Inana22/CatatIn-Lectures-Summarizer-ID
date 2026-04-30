@@ -9,10 +9,82 @@
     href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── OTP Card Styles ── */
+    .otp-card .lc-header { text-align: center; margin-bottom: 28px; }
+    .otp-icon-wrap {
+      width: 56px; height: 56px; border-radius: 16px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px; color: white;
+    }
+    .otp-icon-wrap svg { width: 26px; height: 26px; }
+    .otp-email-target {
+      font-weight: 600; color: #6366f1;
+      font-size: 0.9rem; margin-top: 4px;
+      word-break: break-all;
+    }
+    .otp-inputs-wrap {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; margin: 0 auto 20px;
+    }
+    .otp-digit {
+      width: 48px; height: 56px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 1.5rem; font-weight: 700;
+      text-align: center; color: #1e293b;
+      background: #f8fafc;
+      transition: border-color .2s, box-shadow .2s, transform .1s;
+      outline: none;
+    }
+    .otp-digit:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+      background: #fff;
+      transform: translateY(-2px);
+    }
+    .otp-digit.otp-shake {
+      animation: otpShake .4s ease;
+      border-color: #ef4444;
+    }
+    @keyframes otpShake {
+      0%,100%{ transform: translateX(0); }
+      20%    { transform: translateX(-6px); }
+      40%    { transform: translateX(6px); }
+      60%    { transform: translateX(-4px); }
+      80%    { transform: translateX(4px); }
+    }
+    .otp-sep {
+      color: #94a3b8; font-size: 1.4rem;
+      margin: 0 2px; user-select: none;
+    }
+    .otp-timer-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; font-size: 0.82rem; color: #64748b;
+      margin-bottom: 20px;
+    }
+    .otp-timer-row strong { color: #6366f1; font-weight: 700; }
+    .otp-footer-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; margin-top: 16px;
+    }
+    .btn-text-link {
+      background: none; border: none; padding: 0;
+      color: #6366f1; font-size: 0.85rem; font-weight: 500;
+      cursor: pointer; text-decoration: underline;
+      transition: color .2s;
+    }
+    .btn-text-link:hover { color: #4f46e5; }
+    .btn-text-link:disabled { color: #94a3b8; text-decoration: none; cursor: default; }
+    .otp-divider-dot { color: #94a3b8; user-select: none; }
+  </style>
   <!-- PDF.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 
 <body>
@@ -281,6 +353,57 @@
           </button>
           <p class="lc-foot" style="margin-top:20px">Sudah punya akun? <a href="#"
               onclick="switchToLogin(); return false;">Masuk sekarang</a></p>
+        </div>
+
+        <!-- OTP CARD -->
+        <div class="login-card otp-card" id="otp-card" style="display:none">
+          <div class="lc-header">
+            <div class="otp-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+              </svg>
+            </div>
+            <h2>Verifikasi Email</h2>
+            <p>Kode 6 digit telah dikirim ke</p>
+            <p class="otp-email-target" id="otp-email-display">email@kamu.com</p>
+          </div>
+
+          <div class="otp-inputs-wrap">
+            <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" />
+            <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" />
+            <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" />
+            <span class="otp-sep">—</span>
+            <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" />
+            <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" />
+            <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" />
+          </div>
+
+          <div class="otp-timer-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span>Kode kadaluarsa dalam</span>
+            <strong id="otp-timer">05:00</strong>
+          </div>
+
+          <button class="btn-login" id="btn-verify-otp" onclick="verifyOTP()">
+            <span>Verifikasi</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </button>
+
+          <div class="otp-footer-row">
+            <button class="btn-text-link" id="btn-resend-otp" disabled onclick="resendOTP()">
+              Kirim Ulang Kode
+            </button>
+            <span class="otp-divider-dot">·</span>
+            <button class="btn-text-link" onclick="backToRegister()">
+              Kembali
+            </button>
+          </div>
         </div>
 
       </div><!-- /login-right -->
