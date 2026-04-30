@@ -4,10 +4,9 @@
 //  + OTP verification via EmailJS & Duplicate Email Check
 // ══════════════════════════════════════════════
 
-// ─── CONFIG EMAILJS ───────────────────────────
-const EMAILJS_PUBLIC_KEY  = 'l0Rip2Yk6TklckB0W';
-const EMAILJS_SERVICE_ID  = 'service_a468mtw';
-const EMAILJS_TEMPLATE_ID = 'template_ut0bp6x';
+const EMAILJS_PUBLIC_KEY  = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+const EMAILJS_SERVICE_ID  = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
 
 let currentUser = null;
 let pendingOTP  = null;

@@ -7,10 +7,10 @@
 // ─────────────────────────────────────────────
 //  ⚙️  KONFIGURASI
 // ─────────────────────────────────────────────
-const SUPABASE_URL  = 'https://vevpxvzkyppzvhsmwrtk.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZldnB4dnpreXBwenZoc213cnRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTMxNzcsImV4cCI6MjA5MjE2OTE3N30.EvSKjyw6j2M2qyofPVnBzHapK75Ymr43-VvRYIGIqtM';
+const SUPABASE_URL  = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 
 // ══════════════════════════════════════════════
