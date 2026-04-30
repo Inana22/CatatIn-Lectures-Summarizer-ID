@@ -67,7 +67,6 @@ CatatIn/
 │
 ├── main.py                             # Backend API (Python/FastAPI)
 ├── requirements.txt                    # Dependensi Python
-├── cobamic.html                        # Business Model Canvas (web view)
 ├── .gitignore
 ├── .gitattributes                      # Konfigurasi Git LFS
 └── README.md
